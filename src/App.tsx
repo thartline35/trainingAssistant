@@ -237,63 +237,44 @@ const App = () => {
   };
 
   const generateResponse = async (userMessage: string): Promise<string> => {
-    // Find relevant knowledge base sections
     const relevantInfo = findRelevantKnowledge(userMessage);
     
-    // Simulate API call to Claude with context
-    const systemPrompt = `You are a specialized assistant for VideoGen human evaluation projects. You help team members understand current evaluation guidelines AND proposed improvements to make evaluations more objective and consistent. Use this knowledge base to answer questions:
-
-${relevantInfo.map(info => `${info.section.toUpperCase()}:\n${info.content}`).join('\n\n')}
-
-You are an expert in:
-1. Current Text-to-Video evaluation criteria (prompt faithfulness, video quality, overall preference)
-2. Current Video editing evaluation framework (instruction following, structure preservation, visual quality)  
-3. IMMEDIATE EASY FIXES: Simple approaches to make evaluations more objective (checklists, binary questions, red flags)
-4. QUICK T2V CLARIFICATIONS: Practical improvements for text-to-video evaluations
-5. TASK REQUIREMENTS FIXES: Clear guidelines for instruction writing and creativity
-6. COMPLEX VALIDATION APPROACH: Advanced technical solutions for evaluation objectivity
-7. Making comparison decisions between Video 1 vs Video 2 using improved methods
-
-When answering comparison questions like "what if video 1 is better in 3 areas and video 2 is better in 3 areas":
-- Reference both current evaluation methods AND improved approaches
-- Explain how the easy fixes (checklists, counting rules) can resolve ties
-- Show the decision trees and binary approaches that reduce subjectivity
-- Provide examples from both current guidelines and improvement frameworks
-
-For evaluation improvement questions:
-- Distinguish between immediate easy fixes (80% objectivity benefit, simple implementation) vs complex validation (more comprehensive but time-consuming)
-- Provide concrete examples of how to convert subjective evaluations to objective checklists
-- Explain implementation recommendations and trade-offs
-
-Always be practical, reference specific examples from the guidelines, and help evaluators understand both current practices and how to improve them for more consistent, objective results.`;
-
+    const systemPrompt = `You are a VideoGen Human Evaluation team lead with deep expertise in video AI assessment. Your role is to help team members understand evaluation guidelines, clarify ambiguous situations, and provide practical guidance for consistent evaluations.
+  
+  AVAILABLE KNOWLEDGE BASE:
+  ${relevantInfo.map(info => `${info.section.toUpperCase()}:\n${info.content}`).join('\n\n')}
+  
+  INSTRUCTIONS:
+  - Answer questions directly using the knowledge base content above
+  - Act as an experienced team lead who helps clarify evaluation procedures  
+  - Provide practical, actionable guidance for real evaluation scenarios
+  - When team members ask "How do I determine which video is better at X?", give them concrete steps and criteria
+  - Help resolve ambiguous evaluation situations with clear decision frameworks
+  - Reference specific examples and criteria from the guidelines when relevant
+  - Be decisive and helpful - your team relies on your expertise for consistent evaluations
+  
+  TONE: Professional, helpful, and authoritative. You're the expert they come to when they need clarity on evaluation decisions.`;
+  
     try {
       const response = await fetch("/api/chat", {
-
-      method: "POST",
+        method: "POST", 
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "claude-3-5-haiku-20241022",
+          model: "claude-sonnet-4-20250514",
           max_tokens: 1000,
           messages: [
-            { 
-              role: "system", 
-              content: systemPrompt
-            },
-            { 
-              role: "user", 
-              content: userMessage 
-            }
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userMessage }
           ]
         })
       });
-
+  
       const data = await response.json();
       return data.content[0].text;
     } catch (error) {
-      return "I apologize, but I'm having trouble connecting to my knowledge base right now. Could you try rephrasing your question? I can help with text-to-video, video-to-video, and custom video editing AI training questions.";
+      return "I apologize, but I'm having trouble connecting to my knowledge base right now. Could you try rephrasing your question?";
     }
   };
 
