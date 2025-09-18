@@ -3,8 +3,8 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: 'Method not allowed' });
     }
   
-    if (!process.env.ANTHROPIC_API_KEY) {
-      return res.status(500).json({ error: 'ANTHROPIC_API_KEY is not set in environment' });
+    if (!process.env.VITE_ANTHROPIC_API_KEY) {
+      return res.status(500).json({ error: 'VITE_ANTHROPIC_API_KEY is not set in environment' });
     }
   
     try {
@@ -12,7 +12,7 @@ export default async function handler(req, res) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.ANTHROPIC_API_KEY}`,
+          'Authorization': `Bearer ${process.env.VITE_ANTHROPIC_API_KEY}`,
         },
         body: JSON.stringify(req.body)
       });
