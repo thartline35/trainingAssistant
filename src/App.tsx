@@ -219,23 +219,6 @@ const App = () => {
     scrollToBottom();
   }, [messages]);
 
-  const findRelevantKnowledge = (query: string) => {
-    const lowerQuery = query.toLowerCase();
-    let relevantSections: { section: string; content: string }[] = [];
-    
-    Object.entries(knowledgeBase).forEach(([key, content]) => {
-      if (lowerQuery.includes(key.replace('-', ' ')) || 
-          lowerQuery.includes('comparison') || 
-          lowerQuery.includes('video') ||
-          lowerQuery.includes('training') ||
-          lowerQuery.includes('ai')) {
-        relevantSections.push({ section: key, content });
-      }
-    });
-    
-    return relevantSections;
-  };
-
   const generateResponse = async (userMessage: string): Promise<string> => {
     const systemPrompt = `You are a VideoGen Human Evaluation team lead with deep expertise in video AI assessment. Your role is to help team members understand evaluation guidelines, clarify ambiguous situations, and provide practical guidance for consistent evaluations.
   
@@ -289,7 +272,7 @@ const App = () => {
       return "I apologize, but I'm having trouble connecting right now. Could you try rephrasing your question?";
     }
   };
-  
+
   const handleSubmit = async () => {
     if (!inputValue.trim() || isLoading) return;
 
