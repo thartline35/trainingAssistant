@@ -272,7 +272,7 @@ Always be practical, reference specific examples from the guidelines, and help e
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.ANTHROPIC_API_KEY}`
+          "Authorization": `Bearer ${import.meta.env.ANTHROPIC_API_KEY}`
         },
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
