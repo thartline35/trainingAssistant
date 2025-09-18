@@ -328,17 +328,20 @@ Answer evaluation questions directly using these guidelines. Provide practical, 
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
+          model: "claude-3-5-sonnet-20240620",
           max_tokens: 1000,
+          system: systemPrompt,
           messages: [
-            { role: "system", content: systemPrompt },
             { role: "user", content: userMessage }
           ]
         })
       });
   
       const data = await response.json();
-      return data.content[0].text;
+      if (data?.error?.message) {
+        return `Error from model: ${data.error.message}`;
+      }
+      return data.content?.[0]?.text ?? "No content returned.";
     } catch (error) {
       return "I apologize, but I'm having trouble connecting right now. Could you try rephrasing your question?";
     }
