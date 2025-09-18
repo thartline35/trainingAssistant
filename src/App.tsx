@@ -268,11 +268,11 @@ For evaluation improvement questions:
 Always be practical, reference specific examples from the guidelines, and help evaluators understand both current practices and how to improve them for more consistent, objective results.`;
 
     try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
+      const response = await fetch("/api/chat", {
+
+      method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${import.meta.env.ANTHROPIC_API_KEY}`
         },
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
