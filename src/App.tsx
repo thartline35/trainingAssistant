@@ -275,7 +275,7 @@ Always be practical, reference specific examples from the guidelines, and help e
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
+          model: "claude-3-5-haiku-20241022",
           max_tokens: 1000,
           messages: [
             { 
