@@ -11,7 +11,7 @@ const App = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       type: 'bot',
-      content: 'Hello! I\'m your VideoGen Human Evaluation Assistant. I can help you understand and apply the evaluation guidelines for text-to-video and video editing AI models. Ask me about comparison decisions, evaluation criteria, instruction writing, or any questions about the VideoGen evaluation framework!',
+      content: 'Hello! I\'m here to help you with VideoGen evaluations. Ask me about specific evaluation criteria, how to handle difficult comparison cases, or any questions about applying our evaluation guidelines consistently.',
       timestamp: new Date()
     }
   ]);
@@ -324,16 +324,21 @@ const App = () => {
   };
 
   const sampleQuestions = [
-    "What if video 1 is better than video 2 in 3 areas and video 2 is better than video 1 in 3 areas?",
-    "How can I make evaluations more objective using the immediate easy fixes?",
-    "What's the difference between the easy fixes and complex validation approach?",
-    "How do I turn prompt faithfulness into simple matching checklists?",
-    "What are the red flag visual quality problems to look for?",
-    "How should I write video editing instructions with clear action words?",
-    "What's the proper way to use timestamps in temporal vs non-temporal changes?",
-    "How do I implement the binary yes/no approach for identity preservation?",
-    "What are concrete examples of creative changes for video editing tasks?",
-    "How do I use the quick decision tree for evaluation comparisons?"
+    "How do I decide which video has better visual quality?",
+    "When should I choose 'Both Good' vs 'Both Bad'?",
+    "How do I evaluate if a video follows the prompt correctly?",
+    "What makes one video's motion better than another's?",
+    "How do I assess if faces and bodies look realistic?",
+    "When is a video considered to 'Fail to Edit'?",
+    "How do I evaluate camera control and framing?",
+    "What are the red flags for obviously broken videos?",
+    "How do I handle cases where videos are close in quality?",
+    "When should I select 'Not Applicable' for an evaluation?",
+    "How do I evaluate temporal consistency and smoothness?",
+    "What counts as good subject alignment with the prompt?",
+    "How do I assess if video physics look realistic?",
+    "When does background preservation matter in editing tasks?",
+    "How do I evaluate instruction following in video edits?"
   ];
 
   return (
@@ -343,7 +348,7 @@ const App = () => {
         <div className="p-4 border-b border-gray-200">
           <h1 className="text-xl font-bold text-gray-800 flex items-center gap-2">
             <Video className="w-6 h-6 text-blue-600" />
-            VideoGen Evaluation Assistant
+            VideoGen Evaluation Guide
           </h1>
         </div>
         
@@ -451,7 +456,7 @@ const App = () => {
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Ask about your video AI training projects..."
+                placeholder="Ask about evaluation criteria, comparison decisions, or specific guidelines..."
                 className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 disabled={isLoading}
               />
