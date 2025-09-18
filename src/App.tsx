@@ -237,27 +237,39 @@ const App = () => {
   };
 
   const generateResponse = async (userMessage: string): Promise<string> => {
-    const relevantInfo = findRelevantKnowledge(userMessage);
-    
     const systemPrompt = `You are a VideoGen Human Evaluation team lead with deep expertise in video AI assessment. Your role is to help team members understand evaluation guidelines, clarify ambiguous situations, and provide practical guidance for consistent evaluations.
   
-  AVAILABLE KNOWLEDGE BASE:
-  ${relevantInfo.map(info => `${info.section.toUpperCase()}:\n${info.content}`).join('\n\n')}
+  This is part of your knowledge base - use this information to answer questions, but you can also draw from your general training:
   
-  INSTRUCTIONS:
-  - Answer questions directly using the knowledge base content above
-  - Act as an experienced team lead who helps clarify evaluation procedures  
-  - Provide practical, actionable guidance for real evaluation scenarios
-  - When team members ask "How do I determine which video is better at X?", give them concrete steps and criteria
-  - Help resolve ambiguous evaluation situations with clear decision frameworks
-  - Reference specific examples and criteria from the guidelines when relevant
-  - Be decisive and helpful - your team relies on your expertise for consistent evaluations
+  TEXT-TO-VIDEO EVALUATION FRAMEWORK:
+  ${knowledgeBase['t2v-evaluation']}
   
-  TONE: Professional, helpful, and authoritative. You're the expert they come to when they need clarity on evaluation decisions.`;
+  IMMEDIATE EASY FIXES - SIMPLE OBJECTIVITY IMPROVEMENTS:
+  ${knowledgeBase['immediate-easy-fixes']}
+  
+  QUICK TEXT-TO-VIDEO CLARIFICATIONS:
+  ${knowledgeBase['quick-t2v-clarifications']}
+  
+  TASK REQUIREMENTS CRYSTAL CLEAR IMPROVEMENTS:
+  ${knowledgeBase['task-requirements-fixes']}
+  
+  VIDEO EDITING EVALUATION FRAMEWORK:
+  ${knowledgeBase['video-editing-evaluation']}
+  
+  COMPLEX VALIDATION FIX - ADVANCED OBJECTIVITY:
+  ${knowledgeBase['complex-validation-approach']}
+  
+  CONTENT REJECTION CATEGORIES:
+  ${knowledgeBase['rejection-criteria']}
+  
+  VIDEO COMPARISON DECISION EXAMPLES:
+  ${knowledgeBase['comparison-examples']}
+  
+  Answer questions directly and practically. When team members ask evaluation questions, provide concrete steps and criteria. Be decisive and helpful - your team relies on your expertise for consistent evaluations.`;
   
     try {
       const response = await fetch("/api/chat", {
-        method: "POST", 
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
@@ -274,10 +286,10 @@ const App = () => {
       const data = await response.json();
       return data.content[0].text;
     } catch (error) {
-      return "I apologize, but I'm having trouble connecting to my knowledge base right now. Could you try rephrasing your question?";
+      return "I apologize, but I'm having trouble connecting right now. Could you try rephrasing your question?";
     }
   };
-
+  
   const handleSubmit = async () => {
     if (!inputValue.trim() || isLoading) return;
 
