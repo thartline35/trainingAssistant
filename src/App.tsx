@@ -45,7 +45,7 @@ Step 4: If both fail → Both Bad. If both pass → Both Good.
 Step 5: Otherwise, select the video with fewer failures.`,
 
     // === NEW PV2V ===
-    'pv2v-evaluation': `Prompt-to-Video (PV2V) Evaluation Framework:
+    'pv2v-evaluation': `Personalization Video-to-Video (PV2V) Evaluation Framework:
 
 INSTRUCTION FOLLOWING
 - Prompt Alignment: Does the output video follow all elements of the textual prompt?
