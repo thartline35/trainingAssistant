@@ -48,6 +48,7 @@ Step 5: Otherwise, select the video with fewer failures.`,
     'pv2v-evaluation': `Personalization Video-to-Video (PV2V) Evaluation Framework:
 
 Personalization Video-to-Video = PV2V
+IMPORTANT!! - DO NOT CHANGE WHAT PV2V MEANS!!
 INSTRUCTION FOLLOWING
 - Prompt Alignment: Does the output video follow all elements of the textual prompt?
 - Subject Inclusion: Are all key entities/objects present?
