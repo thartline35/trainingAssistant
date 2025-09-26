@@ -120,29 +120,40 @@ Step 5: If both equally succeed → Both Good.`,
   }, [messages]);
 
   const generateResponse = async (userMessage: string): Promise<string> => {
-    const systemPrompt = `You are a VideoGen Human Evaluation team lead. Use this complete knowledge base to answer evaluation questions.`;
-    
-    try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-3-5-sonnet-20240620",
-          max_tokens: 1000,
-          system: systemPrompt,
-          messages: [{ role: "user", content: userMessage }]
-        })
-      });
-  
-      const data = await response.json();
-      if (data?.error?.message) {
-        return `Error from model: ${data.error.message}`;
-      }
-      return data.content?.[0]?.text ?? "No content returned.";
-    } catch (error) {
-      return "I apologize, but I'm having trouble connecting right now. Could you try rephrasing your question?";
+  // Build system prompt dynamically with your knowledgeBase
+  const kbContent = Object.entries(knowledgeBase)
+    .map(([key, val]) => `=== ${key.toUpperCase()} ===\n${val}`)
+    .join("\n\n");
+
+  const systemPrompt = `You are a VideoGen Human Evaluation team lead. 
+Use the following knowledge base for all answers. 
+⚠️ Never override these definitions with outside assumptions. 
+⚠️ Always treat PV2V as "Personalization Video-to-Video" as defined below.
+
+${kbContent}`;
+
+  try {
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-3-5-sonnet-20240620",
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userMessage }]
+      })
+    });
+
+    const data = await response.json();
+    if (data?.error?.message) {
+      return `Error from model: ${data.error.message}`;
     }
-  };
+    return data.content?.[0]?.text ?? "No content returned.";
+  } catch (error) {
+    return "I apologize, but I'm having trouble connecting right now. Could you try rephrasing your question?";
+  }
+};
+
 
   const handleSubmit = async () => {
     if (!inputValue.trim() || isLoading) return;
