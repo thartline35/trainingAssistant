@@ -18,195 +18,93 @@ const App = () => {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [knowledgeBase, setKnowledgeBase] = useState<{ [key: string]: string }>({
-    't2v-evaluation': `Text-to-Video Evaluation Framework:
-    
-    PROMPT FAITHFULNESS:
-    - Subject Alignment: How accurately the video depicts subjects described in prompt
-    - Spatial Alignment: Accuracy of subjects' relative positions per prompt
-    - Motion Alignment: Accuracy of subjects' movements per prompt description
-    - Camera Control: Camera angles, movements, framing matching prompt requirements
-    
-    VIDEO QUALITY DIMENSIONS:
-    - Visual Appealing: Aesthetic attractiveness and visual appeal
-    - Temporal/Motion Quality: Motion smoothness and natural dynamic changes
-    - Object Recognition/Consistency: Clear, consistently rendered objects
-    - Real-world Physics: Accurate physics and object interactions
-    - Face/Emotion/Body Rendering: Quality of human features and movements
-    - Camera Control: Camera movement, framing, transitions quality
-    - Realness: Natural, lifelike, believable appearance and movement
-    
-    EVALUATION OPTIONS: Video 1, Video 2, Both Good, Both Bad, Not Applicable`,
 
+    // === UPDATED T2V ===
+    't2v-evaluation': `Text-to-Video (T2V) Evaluation Framework:
+
+PROMPT FAITHFULNESS
+- Subject Alignment: Does the video include the correct subjects exactly as described?
+- Spatial Alignment: Are subjects in the correct relative positions?
+- Motion Alignment: Do subjects move correctly and in the right direction?
+- Camera Control: Are camera angles, zoom, or pans matching the prompt?
+- Overall Prompt Faithfulness: Which video best fulfills all elements of the prompt?
+
+VIDEO QUALITY DIMENSIONS
+- Visual Appeal: Is the video aesthetically clean, without glitches or distortions?
+- Temporal/Motion Quality: Is movement smooth and natural across frames?
+- Object Recognition/Consistency: Are objects clear, stable, and consistent?
+- Physics Adherence: Does the video follow normal real-world physics?
+- Face/Emotion/Body Rendering: Are human faces, hands, and bodies rendered accurately?
+- Realness: Does the video look natural and believable?
+
+DECISION TEMPLATE
+Step 1: Break prompt into checklist items (✓/✗).
+Step 2: Count which video meets more items.
+Step 3: If tied, check which video looks more stable/realistic.
+Step 4: If both fail → Both Bad. If both pass → Both Good.
+Step 5: Otherwise, select the video with fewer failures.`,
+
+    // === NEW PV2V ===
+    'pv2v-evaluation': `Prompt-to-Video (PV2V) Evaluation Framework:
+
+INSTRUCTION FOLLOWING
+- Prompt Alignment: Does the output video follow all elements of the textual prompt?
+- Subject Inclusion: Are all key entities/objects present?
+- Action/Behavior: Are described actions correctly depicted?
+- Camera/Environment: Does setting or framing match the prompt?
+
+VIDEO QUALITY DIMENSIONS
+- Visual Clarity: Is the video free from blur, artifacts, or glitches?
+- Temporal/Motion Quality: Are movements smooth and consistent?
+- Object Accuracy: Are objects rendered correctly (shapes, colors, proportions)?
+- Identity Preservation: Are recurring characters/subjects consistent throughout?
+- Physics Adherence: Do movements and interactions respect natural physics?
+- Realness: Does the video appear believable and coherent?
+
+DECISION TEMPLATE
+1. Break prompt into measurable components (who/what/where/how).
+2. Score each video by component completion.
+3. Count obvious technical flaws (blurring, morphing, disappearing objects).
+4. Select the video that covers more prompt elements with fewer flaws.
+5. If both succeed → Both Good. If both fail → Both Bad.`,
+
+    // === UPDATED V2V ===
+    'video-editing-evaluation': `Video-to-Video (V2V) Editing Evaluation Framework:
+
+INSTRUCTION FOLLOWING
+- Did the video apply the specified edit exactly as instructed?
+- Fails to Edit: Did the video fail to apply any change? (Yes → Fail)
+
+STRUCTURE PRESERVATION
+- Background/Environment Preservation: Unchanged unless prompt specifies edits.
+- Identity/Character Preservation: Main subject identity remains unless changed.
+- Subject Motion Preservation: Subject motion stays consistent unless changed.
+- Overall Structure Preservation: Layout, proportions, and scene remain intact.
+
+EDIT VISUAL QUALITY
+- Face/Hand/Body Rendering: Faces, hands, and bodies appear normal and consistent.
+- Edit Visual Quality: No artifacts, flickering, or degradation introduced by edit.
+
+DECISION TEMPLATE
+Step 1: Confirm if edit instruction was applied. If neither → Both Bad.
+Step 2: Compare background, identity, and motion preservation.
+Step 3: Check for red flags (blur, distortions, melted faces).
+Step 4: Select the video that follows instruction and preserves structure with higher visual quality.
+Step 5: If both equally succeed → Both Good.`,
+
+    // === everything else unchanged ===
     'immediate-easy-fixes': `Immediate Easy Fixes - Simple Objectivity Improvements:
-    
-    1. CHECKLIST APPROACH:
-    Instead of "Which video better follows instruction?"
-    Use: Break instruction into components, score each (e.g., ___/3)
-    
-    2. SIMPLE COUNTING RULES:
-    Count background objects that shouldn't change
-    Winner: Video that preserved more objects
-    
-    3. BINARY YES/NO QUESTIONS:
-    Replace "Better preserves identity" with:
-    - Can you recognize same person? Y/N
-    - Same clothes (unless instruction changed)? Y/N
-    - Same hair color (unless instruction changed)? Y/N
-    
-    4. VISUAL QUALITY RED FLAGS:
-    Check problems: Melted faces, wrong finger count, blurry, flickering
-    Winner: Fewer red flags
-    
-    5. QUICK DECISION TREE:
-    - Did both do instruction? → Count checklist items
-    - Only one did instruction? → That one wins  
-    - Neither did instruction? → Both Bad
-    - Both look broken? → Both Bad`,
-
+    ...`,
     'quick-t2v-clarifications': `Quick Text-to-Video Clarifications:
-    
-    1. PROMPT FAITHFULNESS AS MATCHING:
-    Break prompt into elements, create checklist for each video
-    Example: "Chef made pancake, put cream on it"
-    ✓ Chef present ✓ Pancake present ✓ Cream present ✓ Cream going ON pancake
-    
-    2. SPATIAL/MOTION COUNTING:
-    Spatial: "Cat sits NEXT TO dog" → Check beside each other, same height, not stacked
-    Motion: Check right thing moving, right way, right direction
-    
-    3. VIDEO QUALITY RED FLAGS:
-    Blurry, weird colors, shape-changing objects, disappearing things, melted faces, too dark
-    
-    4. PHYSICS COMMON SENSE:
-    Things fall down, heavy objects don't float, animals move correctly, normal walking
-    
-    5. FACE/BODY SIMPLE RULES:
-    Normal face, right number features, 5 fingers each hand, no morphing, realistic movement
-    
-    DECISION TEMPLATE:
-    Step 1: Did video show what prompt asked? Yes/No
-    Step 2: Count obvious problems in each
-    Step 3: If tied, pick more normal/realistic looking`,
-
+    ...`,
     'task-requirements-fixes': `Task Requirements Crystal Clear Improvements:
-    
-    1. CONCRETE CREATIVITY EXAMPLES:
-    Character: Replace clothes with superhero costume, add accessories, change hair color
-    Environment: Kitchen→spaceship, add floating balloons, sunny→stormy night  
-    Objects: Coffee cup→glowing potion, bicycle→motorcycle, add wings to car
-    
-    2. MAIN SUBJECT SIMPLE RULES:
-    = Thing taking most screen space for longest time
-    Test: What you look at first? What's center most? First thing you'd describe?
-    
-    3. PRIMARY OBJECTS CHECKLIST:
-    ☐ Person holding in hands ☐ Touching with body ☐ Sitting/standing on ☐ Using as tool
-    
-    4. ENVIRONMENT CHANGE CATEGORIES:
-    Indoor↔outdoor, background changes, add/remove objects, day↔night, floor changes
-    
-    5. CAMERA FRAMING RULES:
-    Extreme Close-up: Only face/hands
-    Close-up: Head and shoulders
-    Medium: Waist up
-    Wide: Full body + background
-    
-    6. CHANGE vs DESCRIPTION FIX:
-    CORRECT: [Action Word] + [What] + [How different]
-    MUST start with: Add/Remove/Replace/Change
-    
-    7. TIMESTAMP RULES:
-    USE for: Camera movements, motion changes, text appearing
-    DON'T USE for: Clothing changes, background changes, object additions
-    Format: MM:SS (like 00:05)`,
-    
-    'video-editing-evaluation': `Video Editing Evaluation Framework:
-    
-    INSTRUCTION FOLLOWING:
-    - How well output video follows the given edit instruction
-    - Fails to Edit: Check if video contains no edit at all
-    
-    STRUCTURE PRESERVATION:
-    - Background/Environment Preservation: Maintains original background when not edited
-    - Identity/Character Preservation: Preserves main character appearance when not changed
-    - Subject Motion Preservation: Maintains subject motion when not specified to change
-    - Overall Structure Preservation: Preserves layouts, objects, motions except per instruction
-    
-    EDIT VISUAL QUALITY:
-    - Face/Hand/Body Rendering: Quality of human feature rendering
-    - Edit Visual Quality: Preservation of input video quality, avoiding artifacts
-    
-    EVALUATION OPTIONS: Video 1, Video 2, Both Good, Both Bad, Not Applicable`,
-
+    ...`,
     'complex-validation-approach': `Complex Validation Fix - Advanced Objectivity:
-    
-    1. INSTRUCTION FOLLOWING IMPROVEMENTS:
-    - Checklist approach: Break instructions into measurable components
-    - Binary completion scoring: Yes/No for each element
-    - Quantitative measures: Color distance metrics (Delta E), count accuracy, spatial measurements
-    
-    2. STRUCTURE PRESERVATION METRICS:
-    - Pixel-level: SSIM for unchanged regions
-    - Object detection: Count preserved vs altered objects
-    - Geometric: Compare spatial relationships, proportions
-    - Motion analysis: Optical flow for motion preservation
-    
-    3. EDIT VISUAL QUALITY TECHNICAL METRICS:
-    - Blurriness: Laplacian variance
-    - Noise: Signal-to-noise ratio  
-    - Artifacts: JPEG quality assessment
-    - Temporal flickering: Frame-to-frame consistency
-    - Edge bleeding: Color spillover measurement
-    
-    4. QUANTITATIVE SCORING SYSTEM:
-    Instruction Following: 40% (component completion, accuracy 0-100)
-    Structure Preservation: 35% (SSIM score, object preservation rate)
-    Visual Quality: 25% (technical metrics average)
-    
-    5. DECISION THRESHOLDS:
-    Both score >80%: Both Good
-    Difference <10%: Both Good
-    One >70%, other <50%: Clear winner
-    Both <50%: Both Bad`,
-    
+    ...`,
     'rejection-criteria': `Content Rejection Categories:
-    
-    TEXT-TO-VIDEO & VIDEO EDITING:
-    - Incomplete prompt: Lacks essential information or context
-    - Videos not loaded: Media fails to load or isn't visible
-    - Non-English prompt: Prompt not written in English
-    - Prompt/video mismatch: (Video editing) Prompt doesn't match video content
-    - Violating content: Content violating platform community standards
-    
-    VIOLATING CONTENT PROTOCOL:
-    1. Escalate Job ID immediately to manager
-    2. Reject job if uncomfortable reviewing
-    3. Use CO Contact Form for routing violations
-    
-    Examples: Sexual content involving minors, human trafficking, violence threats, suicide promotion, terrorist content, bullying, hate speech`,
-    
+    ...`,
     'comparison-examples': `Video Comparison Decision Examples:
-    
-    SUBJECT ALIGNMENT:
-    - "Video 1 presents the jaguar, but Video 2 does not" → Video 1
-    - "Chef putting cream on pancake in Video 1, cream already on in Video 2" → Video 1
-    
-    CAMERA CONTROL:
-    - "Video 2 zoomed in, doesn't align with static shot requirement" → Video 1
-    - "Only Video 1 follows the rotating shot instruction" → Video 1
-    
-    VISUAL QUALITY:
-    - "Video 1 has more detailed and rich background" → Video 1
-    - "Video 2 person/clothes blend into background" → Video 1
-    - "Excessive saturation in Video 2 makes it unnatural" → Video 1
-    
-    TEMPORAL QUALITY:
-    - "Video 1 presents longer motion trajectory, more complete" → Video 1
-    - "Video 2 presents severe morphing effect" → Video 1
-    
-    PHYSICS ADHERENCE:
-    - "Maple leaf falling trajectory more natural in Video 1" → Video 1
-    - "Wings expected to flap during flight, Video 2 motionless" → Video 1`
+    ...`
   });
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -220,120 +118,17 @@ const App = () => {
   }, [messages]);
 
   const generateResponse = async (userMessage: string): Promise<string> => {
-    const systemPrompt = `You are a VideoGen Human Evaluation team lead. Use this complete knowledge base to answer evaluation questions:
-
-=== TEXT-TO-VIDEO EVALUATION GUIDELINES ===
-
-PROMPT FAITHFULNESS:
-- Subject Alignment: Which video is better at accurately depicting the subjects as described in the prompt? (Video 1/Video 2/Both Good/Both Bad)
-- Spatial Alignment: Which video is better at accurately depicting subjects' relative positions as described in the prompt? (Video 1/Video 2/Both Good/Both Bad) 
-- Motion Alignment: Which video is better at accurately depicting subjects' movements as described in the prompt? (Video 1/Video 2/Both Good/Both Bad)
-- Camera Control: Which video uses camera angles, movements, and framing in a way that better matches the prompt? (Video 1/Video 2/Both Good/Both Bad/Not Applicable)
-- Overall Prompt Faithfulness: Which video more accurately and completely reflects the overall content and intent of the prompt? (Video 1/Video 2)
-
-VIDEO QUALITY DIMENSIONS:
-- Visual Appealing: Which video is more visually attractive or aesthetically pleasing? (Video 1/Video 2/Both Good/Both Bad)
-- Temporal/Motion Quality: Which video has smoother motion and a more natural or engaging level of dynamic changes over time? (Video 1/Video 2/Both Good/Both Bad)
-- Object Recognition/Consistency: Which video has more clearly recognizable and consistently rendered objects? (Video 1/Video 2/Both Good/Both Bad)
-- Real-world Physics Adhering: Which video more accurately reflects real-world physics and object interactions? (Video 1/Video 2/Both Good/Both Bad)
-- Face/Emotion/Body Rendering: Which video has better rendering of human faces, emotions, and body movements? (Video 1/Video 2/Both Good/Both Bad/Not Applicable)
-- Camera Control: Which video demonstrates better camera movement, framing, and transitions? (Video 1/Video 2/Both Good/Both Bad)
-- Realness: Which video feels more natural, lifelike, or believable in terms of overall appearance, movement, and environment coherence? (Video 1/Video 2/Both Good/Both Bad)
-- Overall Video Quality: Which video has better overall visual and production quality? (Video 1/Video 2)
-
-EVALUATION EXAMPLES:
-Subject/Spatial/Motion Alignment:
-- "A jaguar emerges from the thick underbrush" → Video 1 selected because "Video 1 presents the jaguar, but Video 2 does not"
-- "A chef made a pancake and put cream on it" → Video 1 selected because "The chef is putting cream on the pancake in Video 1, but in Video 2, the cream is already on the pancake"
-- "The scuba diver kicks their feet and uses one hand to adjust the mouthpiece" → Video 1 selected because "The scuba driver in Video 1 uses his hand to adjust the mouthpiece, but Video 2 does not"
-
-Camera Control Examples:
-- "Static camera shot. The pangolin plays the accordion and a bird flies through the scene" → Video 1 selected because "Video 2 is zoomed in, which does not align with the static shot"
-- "A rotating camera shot, as we fly over the landscape" → Video 1 selected because "Only Video 1 follows the rotating shot"
-- "A girl is unfolding a birthday gift" → Not Applicable because "There is no specific camera control assigned in the prompt"
-
-=== VIDEO EDITING EVALUATION GUIDELINES ===
-
-INSTRUCTION FOLLOWING:
-- Which video better matches the edit instruction for the input video? (Video 1/Video 2/Both good/Both bad)
-- Fails to Edit: Does a video contain no edit? (Video 1/Video 2/Both/None)
-
-STRUCTURE PRESERVATION:
-- Background/Environment Preservation: If the instruction does not mention changing it, which video better preserves the original background/environment? (Video 1/Video 2/Both Good/Both Bad/Not Applicable)
-- Identity/Character Preservation: If the instruction does not mention changing it, which video better preserves the identity or appearance of the main character? (Video 1/Video 2/Both Good/Both Bad/Not Applicable)
-- Subject Motion Preservation: If the instruction does not mention changing it, which video better maintains the motion of the subject? (Video 1/Video 2/Both Good/Both Bad/Not Applicable)
-- Overall Structure Preservation: Except for the edit instruction, which video better preserves the overall layouts, objects, and motions? (Video 1/Video 2/Both good/Both bad)
-
-EDIT VISUAL QUALITY:
-- Face/Hand/Body Rendering: Which video has better rendering of human faces, hands, and body movements? (Video 1/Video 2/Both Good/Both Bad/Not Applicable)
-- Edit Visual Quality: Which video better preserves the visual quality of the input video and avoids edit artifacts? (Video 1/Video 2/Both Good/Both Bad)
-
-=== VIDEO EDITING TRAINING INSTRUCTIONS ===
-
-TASK REQUIREMENTS:
-- Pick 4-10 second royalty-free input videos
-- Modify characteristics using action words: Add, Remove, Replace
-- Detail specific changes from original to output video
-
-NONTEMPORAL CHARACTERISTICS (no timestamps needed):
-- Main Subject: Core focus of scene (people, animals, main objects driving action)
-- Primary Objects: Main inanimate items subjects directly engage with
-- Environment: Setting, scenery, background, geographic location, time of day
-- Additional Information: Special effects, mood, artistic style changes
-
-TEMPORAL CHARACTERISTICS (require timestamps):
-- Camera Framing: Shot composition (close-up, medium shot, wide shot, etc.)
-- Camera Motion: Camera movement (panning, zooming, tilting, tracking)
-- Scene Motion: Movement of subjects, animals, objects within frame
-- Visual Text: Onscreen text with appearance, position, motion
-
-WRITING GUIDELINES:
-- Only describe CHANGES, not descriptions of output
-- Non-temporal = NO timestamps, Temporal = WITH timestamps
-- Format timestamps as "00:01 - Add xyz" not "[00:01]" or "(00:01)"
-- Don't repeat timestamps - combine changes at same time
-- Don't refer to "main subject" - describe by appearance/clothes
-- Summary cannot be blank - must describe what changed
-
-COMMON ERRORS TO AVOID:
-- Writing descriptions instead of changes
-- Missing action words (Add/Remove/Replace/Change)
-- Wrong timestamp formatting
-- Including scene motion in non-temporal sections
-- Leaving summary blank
-
-=== IMMEDIATE EASY FIXES FOR OBJECTIVITY ===
-
-Replace subjective evaluation with:
-
-1. CHECKLIST APPROACH: Break instructions into components, score each (e.g., ___/3)
-2. SIMPLE COUNTING RULES: Count background objects that shouldn't change - winner preserves more
-3. BINARY YES/NO QUESTIONS: Replace "Better preserves identity" with Y/N questions
-4. VISUAL QUALITY RED FLAGS: Count problems (melted faces, wrong fingers, blurry, flickering)
-5. QUICK DECISION TREE: Did both do instruction? → Count checklist items
-
-REJECTION CRITERIA:
-- Incomplete prompt
-- Videos not loaded  
-- Non-English prompt
-- Prompt/video mismatch (editing)
-- Violating content (escalate immediately)
-
-Answer evaluation questions directly using these guidelines. Provide practical, step-by-step guidance for consistent evaluations.`;
+    const systemPrompt = `You are a VideoGen Human Evaluation team lead. Use this complete knowledge base to answer evaluation questions.`;
     
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "claude-3-5-sonnet-20240620",
           max_tokens: 1000,
           system: systemPrompt,
-          messages: [
-            { role: "user", content: userMessage }
-          ]
+          messages: [{ role: "user", content: userMessage }]
         })
       });
   
@@ -349,27 +144,12 @@ Answer evaluation questions directly using these guidelines. Provide practical, 
 
   const handleSubmit = async () => {
     if (!inputValue.trim() || isLoading) return;
-
     const userMessage = inputValue.trim();
     setInputValue('');
     setIsLoading(true);
-
-    // Add user message
-    setMessages(prev => [...prev, {
-      type: 'user',
-      content: userMessage,
-      timestamp: new Date()
-    }]);
-
-    // Generate and add bot response
+    setMessages(prev => [...prev, { type: 'user', content: userMessage, timestamp: new Date() }]);
     const botResponse = await generateResponse(userMessage);
-    
-    setMessages(prev => [...prev, {
-      type: 'bot',
-      content: botResponse,
-      timestamp: new Date()
-    }]);
-    
+    setMessages(prev => [...prev, { type: 'bot', content: botResponse, timestamp: new Date() }]);
     setIsLoading(false);
   };
 
@@ -383,12 +163,8 @@ Answer evaluation questions directly using these guidelines. Provide practical, 
   const addKnowledgeSection = () => {
     const section = prompt("Enter knowledge section name (e.g., 'new-technique'):");
     const content = prompt("Enter the content for this section:");
-    
     if (section && content) {
-      setKnowledgeBase(prev => ({
-        ...prev,
-        [section]: content
-      }));
+      setKnowledgeBase(prev => ({ ...prev, [section]: content }));
     }
   };
 
