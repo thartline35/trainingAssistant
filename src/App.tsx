@@ -47,8 +47,8 @@ Step 5: Otherwise, select the video with fewer failures.`,
     // === NEW PV2V ===
     'pv2v-evaluation': `Personalization Video-to-Video (PV2V) Evaluation Framework:
 
-Personalization Video-to-Video = PV2V
-IMPORTANT!! - DO NOT CHANGE WHAT PV2V MEANS!!
+CRITICAL: - DO NOT UNDER ANY CIRCUMSTANCE CHANGE WHAT PV2V MEANS!!
+PV2V MEANS Personalization Video-to-Video
 INSTRUCTION FOLLOWING
 - Prompt Alignment: Does the output video follow all elements of the textual prompt?
 - Subject Inclusion: Are all key entities/objects present?
