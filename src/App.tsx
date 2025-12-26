@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, FileText, Video, Upload, ChevronDown, ChevronRight, Layers, Target, Shield, Sparkles, AlertTriangle, CheckCircle, XCircle, HelpCircle } from 'lucide-react';
+import { Send, Bot, User, FileText, Video, ChevronDown, ChevronRight, Layers, Target, Shield, Sparkles, AlertTriangle, CheckCircle, XCircle, HelpCircle } from 'lucide-react';
 
 interface Message {
   type: 'bot' | 'user';
@@ -1013,7 +1013,7 @@ Better to ask than guess wrong consistently!`
 
   const generateResponse = async (userMessage: string): Promise<string> => {
     const kbContent = Object.entries(knowledgeBase)
-      .map(([key, section]) => `=== ${section.title.toUpperCase()} ===\n${section.content}`)
+      .map(([_key, section]) => `=== ${section.title.toUpperCase()} ===\n${section.content}`)
       .join("\n\n");
 
     const systemPrompt = `You are an expert V2V (Video-to-Video) Evaluation Guide assistant. Your role is to help evaluators make consistent, accurate decisions when comparing video editing outputs.
@@ -1106,13 +1106,6 @@ FORMAT:
     const botResponse = await generateResponse(userMessage);
     setMessages(prev => [...prev, { type: 'bot', content: botResponse, timestamp: new Date() }]);
     setIsLoading(false);
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit();
-    }
   };
 
   const sampleScenarios = [
