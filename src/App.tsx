@@ -13,6 +13,49 @@ interface KnowledgeSection {
   icon: React.ReactNode;
 }
 
+// Simple markdown parser for chat messages
+const parseMarkdown = (text: string): string => {
+  return text
+    // Escape HTML first
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    // Headers
+    .replace(/^### (.+)$/gm, '<h3 class="text-base font-semibold mt-3 mb-1">$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2 class="text-lg font-semibold mt-4 mb-2">$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1 class="text-xl font-bold mt-4 mb-2">$1</h1>')
+    // Bold
+    .replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold">$1</strong>')
+    // Italic
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    // Inline code
+    .replace(/`([^`]+)`/g, '<code class="bg-slate-700/50 px-1.5 py-0.5 rounded text-xs font-mono">$1</code>')
+    // Bullet points
+    .replace(/^- (.+)$/gm, '<li class="ml-4 list-disc">$1</li>')
+    .replace(/^• (.+)$/gm, '<li class="ml-4 list-disc">$1</li>')
+    .replace(/^(\d+)\. (.+)$/gm, '<li class="ml-4 list-decimal">$2</li>')
+    // Wrap consecutive list items
+    .replace(/(<li class="ml-4 list-disc">.*<\/li>\n?)+/g, '<ul class="my-2 space-y-1">$&</ul>')
+    .replace(/(<li class="ml-4 list-decimal">.*<\/li>\n?)+/g, '<ol class="my-2 space-y-1">$&</ol>')
+    // Checkmarks and X marks
+    .replace(/✓/g, '<span class="text-emerald-400">✓</span>')
+    .replace(/✗/g, '<span class="text-red-400">✗</span>')
+    .replace(/→/g, '<span class="text-violet-400">→</span>')
+    // Line breaks (double newline = paragraph break)
+    .replace(/\n\n/g, '</p><p class="mt-2">')
+    .replace(/\n/g, '<br/>');
+};
+
+const FormattedMessage = ({ content, isUser }: { content: string; isUser: boolean }) => {
+  const formattedContent = parseMarkdown(content);
+  return (
+    <div 
+      className={`prose prose-sm max-w-none ${isUser ? 'prose-invert' : 'prose-slate'}`}
+      dangerouslySetInnerHTML={{ __html: `<p>${formattedContent}</p>` }}
+    />
+  );
+};
+
 const App = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -1292,7 +1335,9 @@ FORMAT:
                       : 'bg-slate-800/50 text-slate-200 border border-slate-700/50 mr-12'
                   }`}
                 >
-                  <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>
+                  <div className="text-sm leading-relaxed">
+                    <FormattedMessage content={message.content} isUser={message.type === 'user'} />
+                  </div>
                   <p className={`text-xs mt-3 ${message.type === 'user' ? 'text-violet-200' : 'text-slate-500'}`}>
                     {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
