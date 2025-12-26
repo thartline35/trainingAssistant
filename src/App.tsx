@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, FileText, Video, ChevronDown, ChevronRight, Layers, Target, Shield, Sparkles, AlertTriangle, CheckCircle, XCircle, HelpCircle } from 'lucide-react';
+import { Send, Bot, User, FileText, Video, ChevronDown, ChevronRight, Target, Shield, Sparkles, AlertTriangle, CheckCircle, XCircle, HelpCircle } from 'lucide-react';
 
 interface Message {
   type: 'bot' | 'user';
@@ -64,6 +64,8 @@ const App = () => {
 
 I'm here to help you make consistent, accurate Video-to-Video editing evaluations. 
 
+**V2V Components:** Text Prompt + Input Video + Two Output Videos
+
 **Remember: 20-second max per question!**
 
 I can help with all 9 evaluation questions:
@@ -77,9 +79,7 @@ I can help with all 9 evaluation questions:
 8. **Edit Visual Quality** - Artifacts and quality issues
 9. **Overall Preference** - Your final subjective call
 
-**Try describing a specific scenario for step-by-step guidance!**
-
-Example: "I have a reference image of a uniform. Video A shows the reference uniform, Video B has a different uniform but better quality. What should I choose?"`,
+**Try describing a specific scenario for step-by-step guidance!**`,
       timestamp: new Date()
     }
   ]);
@@ -96,16 +96,21 @@ Example: "I have a reference image of a uniform. Video A shows the reference uni
 CRITICAL TIME LIMIT:
 Meta wants us to look at clips for NO MORE THAN 20 SECONDS when determining any question. However, don't let this time limit deter you from closely analyzing the videos to distinguish differences in elements.
 
-V2V evaluation assesses how well a model edits an existing video based on a text instruction while preserving elements that should remain unchanged.
+WHAT IS V2V?
+V2V evaluation assesses how well a model edits an existing video based on a TEXT PROMPT while preserving elements that should remain unchanged.
+
+V2V COMPONENTS (only these 3):
+1. Text prompt (the edit instruction)
+2. Input video (the original)
+3. Two output videos (A and B to compare)
 
 THE GOLDEN RULE:
 The edit instruction is KING. Everything flows from whether the video successfully applied the requested edit.
 
 EVALUATION HIERARCHY (in order of importance):
 1. Did the edit instruction get applied? (Most Critical)
-2. Was the reference image followed (if provided)?
-3. Is structure preserved (background, identity, motion)?
-4. Is the edit visually clean (no artifacts, glitches)?
+2. Is structure preserved (background, subject, motion)?
+3. Is the edit visually clean (no artifacts, glitches)?
 
 EVALUATION QUESTIONS IN ORDER:
 1. Instruction Following
@@ -118,55 +123,8 @@ EVALUATION QUESTIONS IN ORDER:
 8. Edit Visual Quality
 9. Overall Preference
 
-CRITICAL CONCEPT - REFERENCE IMAGES:
-When a reference image is provided, it defines WHAT the edit should look like. The video MUST incorporate the reference image's appearance into the edit. A video that ignores the reference image FAILS instruction following, even if it makes a "good looking" edit.`
-    },
-
-    'reference-image-rules': {
-      title: 'Reference Image Rules',
-      icon: <Layers className="w-4 h-4" />,
-      content: `REFERENCE IMAGE REQUIREMENTS - CRITICAL RULES
-
-WHAT IS A REFERENCE IMAGE?
-A reference image is a visual guide showing exactly what something should look like in the edited video. Common examples:
-- A specific uniform design
-- A particular piece of jewelry
-- A specific pattern or texture
-- A character's appearance
-- A logo or brand element
-
-MANDATORY REQUIREMENT:
-If a reference image is provided, the edited video MUST incorporate the visual appearance from that reference image. This is NOT optional.
-
-DECISION FRAMEWORK FOR REFERENCE IMAGES:
-
-Scenario: Reference image provided, Video A uses it, Video B doesn't but looks good
-→ Video A wins (reference image compliance is mandatory)
-
-Scenario: Reference image provided, neither video uses it
-→ Both Bad (both failed instruction following)
-
-Scenario: Reference image provided, both videos use it
-→ Evaluate based on: accuracy to reference > structure preservation > visual quality
-
-Scenario: Video uses reference but with slight variations vs. Video ignores reference entirely
-→ Slight variations win over complete ignorance
-
-EXAMPLE - UNIFORM SCENARIO:
-Reference: Blue military uniform with gold buttons
-Prompt: "Change her outfit to the uniform"
-
-Video A: Shows the exact reference uniform (blue with gold buttons)
-Video B: Shows a blue uniform but different design (no gold buttons, different style)
-
-WINNER: Video A
-WHY: Video B failed to follow the reference image. Even if Video B looks cleaner or more natural, it did not follow the instruction because the reference image IS part of the instruction.
-
-QUALITY TIE-BREAKER:
-Only when BOTH videos correctly incorporate the reference image should you compare:
-1. How accurately each matches the reference details
-2. Visual quality of the edit
-3. Structure preservation`
+THE CORE V2V QUESTION:
+Which output video best follows the prompt instruction while preserving the input video's elements that weren't supposed to change?`
     },
 
     'instruction-following': {
@@ -197,17 +155,10 @@ If both videos follow the instruction correctly, but one adds unrequested elemen
 - The video that ONLY does what was asked = better
 - Adding extra = worse (even if the extra looks good)
 
-REFERENCE IMAGE COMPLIANCE:
-When a reference image is provided:
-- The reference image IS part of the instruction
-- Ignoring the reference = failing instruction following
-- Must incorporate the visual appearance from the reference
-
 INSTRUCTION COMPONENTS TO CHECK:
 1. WHAT should change (subject, object, attribute)
 2. HOW it should change (the transformation type)
-3. WHAT IT SHOULD LOOK LIKE (reference image, if provided)
-4. WHERE the change should occur (if specified)
+3. WHERE the change should occur (if specified)
 
 PARTIAL CREDIT:
 - If prompt says "blue uniform with gold buttons" and video shows blue uniform without gold buttons → Partial fail
@@ -476,10 +427,11 @@ All three count, so consider:
 
 REMEMBER: 20-second max viewing time per question!
 
+V2V COMPONENTS: Text Prompt + Input Video + Two Output Videos
+
 === STEP 1: INSTRUCTION FOLLOWING (GATE) ===
 For each video, ask:
-□ Was the edit instruction applied?
-□ Was the reference image incorporated (if provided)?
+□ Was the edit instruction from the prompt applied?
 □ Did either add EXTRA unrequested elements?
 
 If NEITHER follows instructions → Both Bad
@@ -546,21 +498,6 @@ Use your answers from previous questions as a guide, but this is your overall ju
       icon: <HelpCircle className="w-4 h-4" />,
       content: `COMMON V2V EVALUATION SCENARIOS
 
-=== REFERENCE IMAGE SCENARIOS ===
-
-SCENARIO: Reference shows specific uniform
-- Video A: Shows exact reference uniform
-- Video B: Shows similar but different uniform, slightly better quality
-Decision: Video A wins
-Reasoning: Reference image compliance is mandatory
-
-SCENARIO: Reference image is blurry
-- Video A: Matches the blur from reference
-- Video B: Creates cleaner interpretation
-Decision: Context-dependent
-- If reference details distinguishable → Video A for accuracy
-- If reference too unclear → Video B acceptable if spirit captured
-
 === INSTRUCTION FOLLOWING SCENARIOS ===
 
 SCENARIO: Extra content added
@@ -576,6 +513,13 @@ SCENARIO: Partial edit
 - Video B: Does cartwheel but also wrong direction
 Decision: Both Bad
 Reasoning: Neither fully followed instruction
+
+SCENARIO: Different interpretations
+- Prompt: Make her smile
+- Video A: Natural-looking smile
+- Video B: Exaggerated, unnatural grin
+Decision: Video A wins
+Reasoning: Natural interpretation beats over-execution
 
 === FAILS TO EDIT SCENARIOS ===
 
@@ -604,6 +548,13 @@ SCENARIO: Subject change quality
 - Video B: Subject smooth and clean
 Decision: Subject = Video B
 Reasoning: B better preserves original subject appearance
+
+SCENARIO: One video warps background
+- Prompt: Change shirt color to green
+- Video A: Green shirt, background slightly warped
+- Video B: Green shirt, background perfect
+Decision: Video B wins for background preservation
+Reasoning: Prompt didn't ask to change background
 
 === MOTION PRESERVATION SCENARIOS ===
 
@@ -657,7 +608,6 @@ These issues typically mean the video should not be selected:
 1. INSTRUCTION FAILURE
 - Edit not applied at all
 - Wrong edit applied
-- Reference image completely ignored
 - Extra unrequested elements added (when other video doesn't)
 
 2. SEVERE RENDERING FAILURES
@@ -717,7 +667,7 @@ FACE/HAND/BODY = N/A when:
 
 When both videos have issues, rank by severity:
 
-1. Instruction/reference failure (worst)
+1. Instruction failure (worst)
 2. Identity destruction  
 3. Severe artifacts/corruption
 4. Motion/temporal breakdown
@@ -793,8 +743,8 @@ OVERALL PREFERENCE:
 
 HIGH CONFIDENCE (clear choice):
 - One follows instructions, other doesn't
-- One matches reference, other doesn't
 - One has severe defects, other doesn't
+- Clear quality difference
 
 LOWER CONFIDENCE (still decide):
 - Both similar quality
@@ -820,7 +770,7 @@ LOWER CONFIDENCE (still decide):
 1. Read the prompt FIRST every time
 2. 20-second max per question
 3. Watch videos ALL the way through
-4. Check for reference images
+4. V2V = Prompt + Input Video + Output Videos
 5. When in doubt on motion → assess normally
 6. Overall Preference = put yourself in user's shoes`
     },
@@ -943,10 +893,10 @@ Meta wants us to look at clips for NO MORE THAN 20 SECONDS per question.
 
 === PRE-EVALUATION CHECKLIST ===
 □ Read the prompt completely
-□ Check for reference image
 □ Identify the specific edit requested
 □ Note what should remain unchanged
 □ Watch BOTH videos fully (edits can be at the end!)
+□ Remember: V2V = Prompt + Input + Outputs only
 
 === EFFICIENT WORKFLOW ===
 
@@ -960,7 +910,7 @@ If taking longer → you might be overthinking
 
 INSTRUCTION FOLLOWING:
 - Check: Did the edit happen?
-- Check: Reference image used?
+- Check: Was the prompt followed correctly?
 - Check: Any extra unrequested content?
 
 FAILS TO EDIT:
@@ -1006,17 +956,17 @@ OVERALL PREFERENCE:
 === COMMON MISTAKES TO AVOID ===
 
 ❌ Letting quality override instruction following
-❌ Ignoring reference images
 ❌ Over-penalizing minor issues
 ❌ Under-penalizing instruction failures
 ❌ Inconsistent standards between videos
 ❌ Not watching videos all the way through
 ❌ Rushing through without reading prompt
+❌ Confusing V2V components (it's just: Prompt + Input + Outputs)
 
 === WHEN STUCK ===
 
 1. Re-read the prompt
-2. Check for reference image
+2. Check which video follows the prompt better
 3. Look for obvious winner on instruction following
 4. Consider: "Would a user accept this?"
 5. If truly equal → Both Good (not forced choice)
@@ -1063,14 +1013,14 @@ Better to ask than guess wrong consistently!`
 
 CRITICAL RULES:
 1. V2V means Video-to-Video editing evaluation ONLY
-2. 20-SECOND MAX viewing time per question (Meta requirement)
-3. Reference images, when provided, are MANDATORY to follow - this is part of instruction following
+2. V2V has ONLY: text prompt + input video + two output videos
+3. 20-SECOND MAX viewing time per question (Meta requirement)
 4. Instruction following is the MOST IMPORTANT criterion
 5. Always provide step-by-step reasoning for scenario-based questions
 6. Be specific and actionable in your guidance
 
 EVALUATION QUESTIONS IN ORDER:
-1. Instruction Following - Did the edit happen? Reference image used? Extra content added?
+1. Instruction Following - Did the edit from the prompt happen? Extra content added?
 2. Fails To Edit - Is video identical to input? (Minor speed/quality changes = NOT an edit)
 3. Background Preservation - Only background, not subject. Text counts as background.
 4. Subject Preservation - Main subject identity. Can be multiple subjects.
@@ -1109,7 +1059,6 @@ RESPONSE GUIDELINES:
 - For edge cases: Acknowledge complexity but provide a recommended approach
 - For motion preservation questions: Always check if it affects the SUBJECT's motion
 - Always tie back to the core principle: Instruction following > Structure preservation > Visual quality
-- When reference images are mentioned, emphasize they are PART of the instruction
 - Remind about the 20-second rule when discussing workflow
 
 FORMAT:
@@ -1152,7 +1101,6 @@ FORMAT:
   };
 
   const sampleScenarios = [
-    "Reference image shows a blue uniform. Video A has the reference uniform, Video B has a different blue uniform but better quality. Which wins?",
     "Prompt says 'add sunglasses'. Video A adds them with minor flickering. Video B doesn't add sunglasses but looks perfect. Decision?",
     "Both videos change the shirt color as requested, but both have slight face distortion. How do I rate this?",
     "Video A looks identical to input but slightly slower with minor distortion. Video B clearly has the edit. How do I answer 'Fails to Edit'?",
@@ -1162,10 +1110,11 @@ FORMAT:
     "Both videos follow the instruction, but Video B adds an extra bug that wasn't asked for. Which is better for instruction following?",
     "There are no humans in the video, just dolphins. What do I put for Face/Hand/Body Rendering?",
     "Video has speech bubble text. One video preserves it, other doesn't. Does this matter for Background Preservation?",
+    "Prompt says 'make her smile'. Video A has natural smile, Video B has exaggerated grin. Which wins?",
   ];
 
   const quickQuestions = [
-    "When does reference image compliance override quality?",
+    "What are the 3 components of V2V?",
     "What's the difference between 'Both Bad' and 'Both Good'?",
     "How do I handle partial edits?",
     "What are automatic fail conditions?",
@@ -1273,14 +1222,10 @@ FORMAT:
               </li>
               <li className="flex items-center gap-2">
                 <span className="w-5 h-5 rounded-full bg-violet-500/20 text-violet-300 flex items-center justify-center text-[10px] font-bold">2</span>
-                Reference Image Match
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-violet-500/20 text-violet-300 flex items-center justify-center text-[10px] font-bold">3</span>
                 Structure Preservation
               </li>
               <li className="flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-violet-500/20 text-violet-300 flex items-center justify-center text-[10px] font-bold">4</span>
+                <span className="w-5 h-5 rounded-full bg-violet-500/20 text-violet-300 flex items-center justify-center text-[10px] font-bold">3</span>
                 Visual Quality
               </li>
             </ol>
