@@ -62,22 +62,25 @@ const App = () => {
       type: 'bot',
       content: `Welcome to the V2V Evaluation Guide! 🎬
 
-I'm here to help you make consistent, accurate Video-to-Video editing evaluations. 
-
 **V2V Components:** Text Prompt + Input Video + Two Output Videos
 
 **Remember: 20-second max per question!**
 
 I can help with all 9 evaluation questions:
 1. **Instruction Following** - Did the edit happen correctly?
-2. **Fails To Edit** - Is the video identical to input?
+2. **Fails To Edit** - Is video identical to input? (Safer to assume edit exists)
 3. **Background Preservation** - Environment maintained?
-4. **Subject Preservation** - Main subject identity intact?
-5. **Motion Preservation** - When to use N/A vs assess normally
-6. **Overall Structure** - All elements combined
-7. **Face/Hand/Body Rendering** - Human rendering quality
-8. **Edit Visual Quality** - Artifacts and quality issues
-9. **Overall Preference** - Your final subjective call
+4. **Subject Preservation** - Same identity = Both Good (unless glitches)
+5. **Motion Preservation** - N/A if prompt changes subject's motion
+6. **Overall Structure** - All elements combined (we're lenient)
+7. **Face/Hand/Body Rendering** - RENDERING quality, not preservation!
+8. **Edit Visual Quality** - Artifacts and quality (we're lenient)
+9. **Overall Preference** - Instruction following is PRIMARY!
+
+**Key Reminders:**
+• Subject Preservation: Same person in both? → Both Good
+• F/H/B: It's about rendering QUALITY, not preservation
+• Overall Preference: Instruction follower WINS
 
 **Try describing a specific scenario for step-by-step guidance!**`,
       timestamp: new Date()
@@ -172,6 +175,8 @@ PARTIAL CREDIT:
 
 IMPORTANT: Watch all videos ALL THE WAY THROUGH as sometimes the edit is minor (end of clip cutting off, etc.)
 
+SAFER APPROACH: Assume the edit exists and answer the rest of the questions normally. If both videos clearly have edits, the answer should be "None".
+
 WHEN TO CHOOSE EACH ANSWER:
 
 VIDEO A or VIDEO B:
@@ -194,9 +199,15 @@ If the video is NOT 100% identical because of:
 - Slightly slower/faster
 - Slightest color difference
 
-→ We assume it has NO EDITS (these are artifacts, not intentional edits)
+→ These are artifacts, NOT intentional edits
+→ We assume it has NO EDITS
 
 HOWEVER: Always safer to consider there WAS an edit and complete the rest of the task normally. The close-to-non-edited video would likely become the answer for most structure preservation questions anyway.
+
+PRACTICAL GUIDANCE:
+- If both videos clearly show the requested edit → Answer "None"
+- If unsure → Assume edit exists, continue with other questions
+- Only mark as "failed to edit" if video is truly identical to input
 
 DETECTION TIPS:
 1. Watch both videos completely - edits can be subtle or at the end
@@ -209,7 +220,7 @@ DETECTION TIPS:
     'structure-preservation': {
       title: 'Structure Preservation',
       icon: <Shield className="w-4 h-4" />,
-      content: `STRUCTURE PRESERVATION - THREE DIMENSIONS
+      content: `STRUCTURE PRESERVATION - FOUR DIMENSIONS
 
 === BACKGROUND PRESERVATION ===
 If the instruction does not mention changing it, which video better preserves the original background/environment?
@@ -246,16 +257,19 @@ This question is about the MAIN SUBJECT ONLY. Other changes don't count here.
 Main subjects can be: humans, objects, animals, etc. - whatever the focal item is!
 There CAN be multiple subjects.
 
+CRITICAL: This is about IDENTITY, not about the edit accuracy!
+- If the SAME PERSON appears in both outputs (even with different edits) → Both Good
+- Only choose A or B if one has glitches/distortions affecting the subject's identity
+
 WHEN TO CHOOSE:
 VIDEO A or VIDEO B:
-- The video presenting character identically/closest to input
-- Can choose even with minor adjustments requested by prompt
+- ONLY if one video has glitches/distortions that affect the subject's identity
 - Example: Video A better because Video B has weird indents on pig's back
 
 BOTH GOOD:
-- If both make NO changes to main subject, or minimally change it equally
-- Can choose even with minor prompt-requested adjustments
-- Example: Both videos - you can still tell it's the same man
+- If both preserve the same subject identity, even if edits differ
+- If you can still tell it's the same person/thing in both → Both Good
+- Example: Both videos show the same man, even with different uniforms → Both Good
 
 BOTH BAD:
 - If both make drastic changes making you question if it's the same thing
@@ -270,6 +284,7 @@ NOT APPLICABLE:
 Except for the edit instruction, which video better preserves the overall layouts, objects, and motions?
 
 This question covers ALL layouts, motions, and objects INCLUDING the main subject.
+We are LENIENT with this question when grading.
 
 WHEN TO CHOOSE:
 VIDEO A or VIDEO B:
@@ -355,6 +370,10 @@ TEMPORAL ISSUES:
       icon: <User className="w-4 h-4" />,
       content: `FACE/HAND/BODY RENDERING: Which video has better rendering of human faces, hands, and body movements?
 
+IMPORTANT: This is NOT about preservation!
+This question asks which video BEST RENDERS these elements in general.
+We're looking for quality of rendering, not preservation of the input.
+
 This considers THREE sub-elements:
 1. Faces
 2. Hands
@@ -374,6 +393,7 @@ DOES NOT APPLY TO (use N/A):
 
 VIDEO A or VIDEO B:
 - Choose where person/people look most like a real human
+- Choose the video with BETTER RENDERING quality
 - Can choose even with some minor artifacts
 - If you can tell it's a person overall, pick the better one
 - Example: Body movement good in both, but hands and faces rendered better in Video B → choose B
@@ -413,11 +433,11 @@ BODY:
 - Limbs attached properly
 - Joints bend correctly
 
-=== SUB-ELEMENT WEIGHTING ===
-All three count, so consider:
-- If body movement good in both but one has better face/hands → pick that one
-- Severe face distortion often worse than hand issues
-- Consider what's most visible/prominent in the video`
+=== KEY DISTINCTION ===
+Unlike other structure preservation questions:
+- This is about RENDERING QUALITY, not preservation
+- We want to know: which video makes humans look more human?
+- Even if one video changed more, if it renders humans better, it can win this question`
     },
 
     'decision-framework': {
@@ -429,68 +449,71 @@ REMEMBER: 20-second max viewing time per question!
 
 V2V COMPONENTS: Text Prompt + Input Video + Two Output Videos
 
-=== STEP 1: INSTRUCTION FOLLOWING (GATE) ===
-For each video, ask:
+=== QUESTION ORDER (follow this exactly) ===
+
+1. INSTRUCTION FOLLOWING
 □ Was the edit instruction from the prompt applied?
 □ Did either add EXTRA unrequested elements?
+→ Video that follows prompt WITHOUT extras wins
 
-If NEITHER follows instructions → Both Bad
-If only ONE follows instructions → That video wins
-If BOTH follow (one adds extra) → Video without extra is better
-If BOTH follow equally → Continue to Step 2
-
-=== STEP 2: FAILS TO EDIT ===
+2. FAILS TO EDIT
 □ Is either video identical to input?
-□ Check: frame drops, minor distortion, slight speed change = NOT an edit
+□ Minor speed/quality/distortion changes = NOT an edit
+→ Safer to assume edit exists and answer normally
+→ If both clearly edited, answer should be "None"
 
-If one failed to edit → Note it, other video likely wins
-If both failed → Both (for this question)
-If both edited → None, continue
-
-=== STEP 3: STRUCTURE PRESERVATION ===
-
-BACKGROUND:
+3. BACKGROUND PRESERVATION
 □ Which preserves background/environment better?
 □ Is text preserved?
 □ Full background change requested? → N/A
 
-SUBJECT:
-□ Which preserves main subject identity/appearance?
-□ Is it still recognizable as the same subject?
+4. SUBJECT PRESERVATION
+□ Is it the SAME PERSON/THING in both videos?
+□ If same identity in both (even with different edits) → Both Good
+□ Only pick A or B if one has glitches affecting identity
 □ Subject change requested? → N/A
 
-MOTION:
+5. MOTION PRESERVATION
 □ Explicit motion change in prompt? → N/A immediately
 □ Implicit motion change (object interaction)? → N/A
 □ Otherwise, which preserves motion better?
+□ When in doubt → assess normally, pick best preserver
 
-OVERALL STRUCTURE:
+6. OVERALL STRUCTURE PRESERVATION
 □ All layouts, objects, and motions combined
 □ Which is closest to input overall?
+□ We are LENIENT with this question
 
-=== STEP 4: FACE/HAND/BODY ===
+7. FACE/HAND/BODY RENDERING
 □ Are there humans/humanoids in the video?
 □ No humans → N/A
-□ Which has better face, hand, body rendering?
+□ Which has better RENDERING (not preservation)?
+□ This is about quality of human rendering, not preservation
 
-=== STEP 5: EDIT VISUAL QUALITY ===
+8. EDIT VISUAL QUALITY
 □ Which has better visual quality vs input?
 □ Check for artifacts, blur, glitches
 □ This is about QUALITY, not prompt adherence
+□ We are LENIENT with this question
 
-=== STEP 6: OVERALL PREFERENCE ===
-This is the FINAL SUBJECTIVE CALL.
+9. OVERALL PREFERENCE
+□ Balance: instruction following > structure preservation > visual quality
+□ INSTRUCTION FOLLOWING IS THE PRIMARY CRITERIA
+□ If one video follows instructions and other doesn't → instruction follower WINS
+□ "Would I use this for social media or professional use?"
 
-Balance:
-1. Instruction following
-2. Structure preservation  
-3. Edit visual quality
+=== OVERALL PREFERENCE - CRITICAL RULE ===
 
-Ask yourself: "If I were a user editing this video for social media or professional use, which would I prefer?"
+The video that FOLLOWS INSTRUCTIONS wins Overall Preference, even if:
+- The other video has better quality
+- The other video preserves structure better
+- The other video looks cleaner
 
-A video may be better at instruction following, but another may have better editing and preserved more elements. Weigh these factors.
+Example: Video A follows prompt correctly but has some artifacts
+         Video B ignores part of the prompt but looks perfect
+         → Video A wins Overall Preference
 
-Use your answers from previous questions as a guide, but this is your overall judgment call.`
+INSTRUCTION FOLLOWING is the FIRST and MOST IMPORTANT criteria for Overall Preference.`
     },
 
     'common-scenarios': {
@@ -521,6 +544,17 @@ SCENARIO: Different interpretations
 Decision: Video A wins
 Reasoning: Natural interpretation beats over-execution
 
+SCENARIO: Uniform change with background contamination
+- Prompt: Change her clothes to red apron and red hat
+- Video A: Correct uniform change but ALSO changes background (unwanted)
+- Video B: Generic red apron/hat, preserves background perfectly
+Decision for Instruction Following: Context-dependent
+- If A followed prompt better for the clothing → A
+- But A added EXTRA unrequested content (background change) → could favor B
+Decision for Background: Video B (preserved original)
+Decision for Overall Preference: Video A (if it followed the clothing instruction correctly)
+Reasoning: Instruction following is PRIMARY criteria for Overall Preference
+
 === FAILS TO EDIT SCENARIOS ===
 
 SCENARIO: Minor differences from input
@@ -528,33 +562,26 @@ SCENARIO: Minor differences from input
 - Video B: Clear edit applied
 Decision: Video A = Fails to Edit (choose A for that question)
 Reasoning: Speed/distortion changes = artifacts, not edits
+NOTE: Safer to assume edit exists and continue normally
 
-SCENARIO: Both nearly identical to input
-- Video A: Identical to input
-- Video B: Identical to input with slight color shift
-Decision: Both fail to edit
-Reasoning: Neither applied the requested edit
+SCENARIO: Both clearly edited
+- Video A: Shows the requested edit
+- Video B: Shows the requested edit
+Decision: None (neither failed to edit)
 
-=== STRUCTURE PRESERVATION SCENARIOS ===
+=== SUBJECT PRESERVATION SCENARIOS ===
 
-SCENARIO: Background with added element
-- Prompt: Add green car in background
-- Both videos add car, backgrounds otherwise preserved
-Decision: Background = Both Good
-Reasoning: Adding requested element ≠ destroying background
+SCENARIO: Same person, different edits
+- Video A: Same person with correct uniform
+- Video B: Same person with generic uniform
+Decision: Both Good
+Reasoning: Both preserve the SAME IDENTITY - this question is about identity, not edit accuracy
 
-SCENARIO: Subject change quality
-- Video A: Subject preserved but pig has weird indents
-- Video B: Subject smooth and clean
-Decision: Subject = Video B
-Reasoning: B better preserves original subject appearance
-
-SCENARIO: One video warps background
-- Prompt: Change shirt color to green
-- Video A: Green shirt, background slightly warped
-- Video B: Green shirt, background perfect
-Decision: Video B wins for background preservation
-Reasoning: Prompt didn't ask to change background
+SCENARIO: One has glitches
+- Video A: Same person, smooth rendering
+- Video B: Same person but with glitchy artifacts on face
+Decision: Video A
+Reasoning: B has glitches affecting the subject's appearance
 
 === MOTION PRESERVATION SCENARIOS ===
 
@@ -568,19 +595,13 @@ SCENARIO: Background motion added
 Decision: Motion = Assess normally (not N/A)
 Reasoning: Background motion doesn't affect subject
 
-SCENARIO: Appearance change
-- Prompt: Replace lioness with kitten
-- Cat in videos moves differently
-Decision: Motion = Assess normally, pick best match
-Reasoning: Appearance change ≠ motion request
-
 === FACE/HAND/BODY SCENARIOS ===
 
-SCENARIO: Both have issues
-- Video A: Face slightly distorted, hands okay
-- Video B: Face clearer, hands morphed
-Decision: Compare sub-elements, pick overall better
-Reasoning: All three elements count
+SCENARIO: Different rendering quality
+- Video A: Faces look natural, hands correct
+- Video B: Faces slightly distorted, 6 fingers
+Decision: Video A
+Reasoning: This is about RENDERING QUALITY, not preservation
 
 SCENARIO: No humans
 - Video only contains dolphins
@@ -589,11 +610,20 @@ Reasoning: F/H/BR only applies to humans/humanoids
 
 === OVERALL PREFERENCE SCENARIOS ===
 
-SCENARIO: Trade-offs
-- Video A: Perfect instruction following, some artifacts
-- Video B: Slightly off on instruction, beautiful quality
-Decision: Usually Video A, but consider severity
-Reasoning: Instruction following weighs heavily, but extreme quality differences matter`
+SCENARIO: Instruction following vs Quality trade-off
+- Video A: Follows prompt correctly, has some artifacts
+- Video B: Ignores part of prompt, perfect quality
+Decision: Video A WINS
+Reasoning: INSTRUCTION FOLLOWING is the PRIMARY criteria
+
+SCENARIO: Both follow instructions equally
+- Video A: Follows prompt, good quality
+- Video B: Follows prompt, slightly better quality
+Decision: Video B (quality is tie-breaker when instruction following is equal)
+
+CRITICAL RULE FOR OVERALL PREFERENCE:
+If one video follows instructions and the other doesn't, 
+the instruction-follower WINS regardless of other factors.`
     },
 
     'red-flags': {
@@ -685,59 +715,64 @@ Ask: "Would I share this on social media or use professionally?"
     'rating-scale': {
       title: 'Rating Scale Guide',
       icon: <CheckCircle className="w-4 h-4" />,
-      content: `V2V RATING SCALE - ALL QUESTIONS
+      content: `V2V RATING SCALE - ALL 9 QUESTIONS
 
 === ANSWER OPTIONS BY QUESTION ===
 
-INSTRUCTION FOLLOWING:
-- Video A / Video B: One is better (fully or partially)
+1. INSTRUCTION FOLLOWING:
+- Video A / Video B: One is better at following the prompt
 - Both Good: Both follow equally and completely
 - Both Bad: Both follow partially or not at all
 
-FAILS TO EDIT:
+2. FAILS TO EDIT:
 - Video A / Video B: That video has NO edit (identical to input)
 - Both: Neither video has an edit
-- None: Both videos have edits
+- None: Both videos have edits (most common)
 
-BACKGROUND PRESERVATION:
+3. BACKGROUND PRESERVATION:
 - Video A / Video B: One preserves background better
 - Both Good: Both equally maintain background
 - Both Bad: Both drastically changed background
 - N/A: Full background change was instructed
 
-SUBJECT PRESERVATION:
-- Video A / Video B: One preserves subject better
-- Both Good: Both make no/minimal equal changes
-- Both Bad: Both drastically changed subject (unrequested)
+4. SUBJECT PRESERVATION:
+- Video A / Video B: ONLY if one has glitches affecting identity
+- Both Good: Same identity in both (even with different edits)
+- Both Bad: Both drastically changed subject identity
 - N/A: Subject change was instructed
 
-MOTION PRESERVATION:
+5. MOTION PRESERVATION:
 - Video A / Video B: One preserves motion better
-- Both Good: Both make no/minimal equal motion changes
+- Both Good: Both maintain motion equally
 - Both Bad: Both drastically changed motion (unrequested)
 - N/A: Subject motion change in prompt (explicit or implicit)
 
-OVERALL STRUCTURE:
+6. OVERALL STRUCTURE PRESERVATION:
 - Video A / Video B: One preserves overall structure better
 - Both Good: Both equally match input
 - Both Bad: Both drastically changed (unrequested)
-- N/A: Significant changes instructed, input unrecognizable
+- N/A: Significant changes instructed
+(We are LENIENT with this question)
 
-FACE/HAND/BODY RENDERING:
-- Video A / Video B: One has better human rendering
-- Both Good: Both clearly show recognizable humans
+7. FACE/HAND/BODY RENDERING:
+- Video A / Video B: One has better human RENDERING quality
+- Both Good: Both render humans well
 - Both Bad: Both have significant human rendering issues
 - N/A: No humans/humanoids in video
+(This is about RENDERING QUALITY, not preservation!)
 
-EDIT VISUAL QUALITY:
+8. EDIT VISUAL QUALITY:
 - Video A / Video B: One has better visual quality
 - Both Good: Both maintain input quality
 - Both Bad: Both significantly degraded quality
+(We are LENIENT with this question)
 
-OVERALL PREFERENCE:
-- Video A / Video B: Your subjective choice
+9. OVERALL PREFERENCE:
+- Video A / Video B: Your choice based on all factors
 - Both Good: Both acceptable, can't distinguish
 - Both Bad: Neither acceptable for use
+CRITICAL: Instruction following is PRIMARY criteria!
+→ If A follows prompt and B doesn't → A WINS
 
 === DECISION CONFIDENCE ===
 
@@ -753,17 +788,17 @@ LOWER CONFIDENCE (still decide):
 
 === COMMON MISTAKES ===
 
-❌ Using Both Good when one is clearly better
-→ If you can distinguish quality, pick one
+❌ Subject Preservation: Picking A or B just because edit differs
+→ If same identity in both → Both Good (unless glitches)
 
-❌ Using Both Bad when one is salvageable
-→ Both Bad = NEITHER is acceptable
+❌ F/H/B Rendering: Treating it like preservation
+→ It's about RENDERING QUALITY, not preservation
 
-❌ Forgetting N/A when instructed to change
-→ Check prompt before each preservation question
+❌ Overall Preference: Picking cleaner video over instruction-follower
+→ Instruction following is PRIMARY - follower WINS
 
-❌ Mixing up Fails to Edit answers
-→ Video A/B = that video failed (not "is better")
+❌ Fails to Edit: Marking as failed when edit clearly exists
+→ Safer to assume edit exists, answer "None"
 
 === HELPFUL REMINDERS ===
 
@@ -772,7 +807,7 @@ LOWER CONFIDENCE (still decide):
 3. Watch videos ALL the way through
 4. V2V = Prompt + Input Video + Output Videos
 5. When in doubt on motion → assess normally
-6. Overall Preference = put yourself in user's shoes`
+6. Overall Preference = instruction following FIRST`
     },
 
     'motion-preservation-na': {
@@ -908,66 +943,65 @@ If taking longer → you might be overthinking
 
 === QUESTION-BY-QUESTION TIPS ===
 
-INSTRUCTION FOLLOWING:
-- Check: Did the edit happen?
-- Check: Was the prompt followed correctly?
+1. INSTRUCTION FOLLOWING:
+- Check: Did the edit from the prompt happen?
 - Check: Any extra unrequested content?
+- Extra content = worse (even if it looks good)
 
-FAILS TO EDIT:
+2. FAILS TO EDIT:
 - Watch all the way through!
 - Minor speed/quality changes ≠ edits
-- Safer to assume edit exists and continue
+- Safer to assume edit exists → answer "None"
 
-BACKGROUND:
+3. BACKGROUND:
 - Only assess background, not subject
 - Text counts as background
 - Partial background changes ≠ N/A
 
-SUBJECT:
-- Focus on main subject only
-- Can there be multiple? Yes!
-- Is it still recognizable?
+4. SUBJECT:
+- This is about IDENTITY, not edit accuracy!
+- Same person in both videos? → Both Good
+- Only pick A/B if one has glitches affecting identity
 
-MOTION:
+5. MOTION:
 - Check prompt first for motion words
 - Object interaction change? → likely N/A
 - When in doubt → assess normally
 
-OVERALL STRUCTURE:
+6. OVERALL STRUCTURE:
 - Big picture view
 - All elements combined
-- Compared to input
+- We are LENIENT with this question
 
-FACE/HAND/BODY:
-- Only for humans/humanoids
+7. FACE/HAND/BODY:
+- This is about RENDERING QUALITY, not preservation!
+- Which video makes humans look better?
 - Animals/monsters → N/A
-- Check all three: face, hands, body
 
-EDIT VISUAL QUALITY:
+8. EDIT VISUAL QUALITY:
 - About quality, NOT prompt adherence
 - Compare to input video quality
-- Artifacts, blur, glitches
+- We are LENIENT with this question
 
-OVERALL PREFERENCE:
-- Your final call
-- Balance all factors
-- "Would I use this?"
+9. OVERALL PREFERENCE:
+- INSTRUCTION FOLLOWING IS PRIMARY!
+- If A follows prompt and B doesn't → A WINS
+- Quality only matters when instruction following is equal
 
 === COMMON MISTAKES TO AVOID ===
 
-❌ Letting quality override instruction following
-❌ Over-penalizing minor issues
-❌ Under-penalizing instruction failures
-❌ Inconsistent standards between videos
+❌ Subject: Picking A/B because edits differ (should be Both Good if same identity)
+❌ F/H/B: Treating it like preservation (it's about rendering quality)
+❌ Overall Preference: Choosing quality over instruction-following
+❌ Fails to Edit: Marking failed when edit clearly exists
 ❌ Not watching videos all the way through
 ❌ Rushing through without reading prompt
-❌ Confusing V2V components (it's just: Prompt + Input + Outputs)
 
 === WHEN STUCK ===
 
 1. Re-read the prompt
 2. Check which video follows the prompt better
-3. Look for obvious winner on instruction following
+3. For Overall Preference: instruction follower WINS
 4. Consider: "Would a user accept this?"
 5. If truly equal → Both Good (not forced choice)
 6. If truly both unacceptable → Both Bad
@@ -1016,56 +1050,65 @@ CRITICAL RULES:
 2. V2V has ONLY: text prompt + input video + two output videos
 3. 20-SECOND MAX viewing time per question (Meta requirement)
 4. Instruction following is the MOST IMPORTANT criterion
-5. Always provide step-by-step reasoning for scenario-based questions
+5. Always address ALL 9 evaluation questions when walking through scenarios
 6. Be specific and actionable in your guidance
 
-EVALUATION QUESTIONS IN ORDER:
-1. Instruction Following - Did the edit from the prompt happen? Extra content added?
-2. Fails To Edit - Is video identical to input? (Minor speed/quality changes = NOT an edit)
-3. Background Preservation - Only background, not subject. Text counts as background.
-4. Subject Preservation - Main subject identity. Can be multiple subjects.
-5. Motion Preservation - Check for explicit/implicit motion change requests first
-6. Overall Structure - All layouts, objects, motions combined
-7. Face/Hand/Body Rendering - Humans/humanoids only. N/A for animals/monsters.
-8. Edit Visual Quality - Quality vs input, NOT prompt adherence
-9. Overall Preference - Balance all factors, "Would I use this?"
+ALL 9 EVALUATION QUESTIONS (in order):
+1. Instruction Following - Did the prompt edit happen? Extra content added?
+2. Fails To Edit - Is video identical to input? (Safer to assume edit exists)
+3. Background Preservation - Environment maintained?
+4. Subject Preservation - Same identity in both? If yes → Both Good (unless glitches)
+5. Motion Preservation - Check for explicit/implicit motion requests → N/A if yes
+6. Overall Structure Preservation - All elements combined (we are LENIENT)
+7. Face/Hand/Body Rendering - RENDERING QUALITY, not preservation! N/A if no humans
+8. Edit Visual Quality - Quality vs input (we are LENIENT)
+9. Overall Preference - INSTRUCTION FOLLOWING IS PRIMARY CRITERIA
 
-MOTION PRESERVATION N/A RULES (VERY IMPORTANT):
+CRITICAL CORRECTIONS:
+
+SUBJECT PRESERVATION:
+- This is about IDENTITY, not edit accuracy
+- If SAME PERSON appears in both outputs (even with different edits) → Both Good
+- Only pick A or B if one has glitches/distortions affecting identity
+
+FAILS TO EDIT:
+- Safer to assume edit exists and answer questions normally
+- If both clearly edited → answer is "None"
+- Minor speed/quality/distortion = NOT an edit
+
+FACE/HAND/BODY RENDERING:
+- This is about RENDERING QUALITY, not preservation
+- Which video makes humans look more human?
+- N/A if no humans/humanoids
+
+OVERALL PREFERENCE:
+- INSTRUCTION FOLLOWING is the PRIMARY and FIRST criteria
+- Video that follows instructions WINS, even if other video has better quality
+- If A follows prompt and B doesn't → A WINS Overall Preference
+- Quality/preservation only matter when instruction following is equal
+
+MOTION PRESERVATION N/A RULES:
 - Mark N/A ONLY when prompt requests changing the SUBJECT'S motion
 - EXPLICIT: Prompt literally says to change motion → N/A immediately
 - IMPLICIT: Object interaction changes affect motion (guitar→violin) → N/A
 - NOT N/A: Camera movement, background motion, added elements, appearance changes
 - When in doubt: Assess normally and pick best motion-preserving video
-- Update 12/17: Additional movements not affecting main character = still rate normally
-- Update 12/21: Most N/A cases are explicit; implicit requests are RARE
-
-FAILS TO EDIT RULES:
-- If video not 100% identical due to: missing frames, minor distortion, lower quality, speed changes, slight color difference → Assume NO EDIT
-- Safer to assume edit exists and complete task normally
-
-ANSWER OPTIONS:
-- Video A / Video B: One is better
-- Both Good: Both equally acceptable
-- Both Bad: Neither acceptable
-- N/A: Change was instructed (for preservation questions)
-- None / Both: For Fails To Edit question only
 
 KNOWLEDGE BASE:
 ${kbContent}
 
 RESPONSE GUIDELINES:
-- For scenario questions: Walk through the decision framework step-by-step
-- For concept questions: Explain clearly with examples
-- For edge cases: Acknowledge complexity but provide a recommended approach
-- For motion preservation questions: Always check if it affects the SUBJECT's motion
-- Always tie back to the core principle: Instruction following > Structure preservation > Visual quality
-- Remind about the 20-second rule when discussing workflow
+- For scenario questions: Walk through ALL 9 questions step-by-step
+- Always include: Instruction Following, Fails to Edit, Background, Subject, Motion, Overall Structure, F/H/B Rendering, Edit Visual Quality, Overall Preference
+- For Subject Preservation: Remember - same identity = Both Good
+- For F/H/B: Remember - it's about rendering quality, not preservation
+- For Overall Preference: Instruction following is PRIMARY - if one follows and other doesn't, follower WINS
 
 FORMAT:
-- Use clear headers for multi-part answers
-- Use bullet points for criteria lists
+- Use clear headers for each of the 9 questions
+- Use bullet points for criteria
 - Bold key decision points
-- End scenario analyses with a clear RECOMMENDATION`;
+- End with clear RECOMMENDATION for each question`;
 
     try {
       const response = await fetch("/api/chat", {
@@ -1101,29 +1144,29 @@ FORMAT:
   };
 
   const sampleScenarios = [
-    "Prompt says 'add sunglasses'. Video A adds them with minor flickering. Video B doesn't add sunglasses but looks perfect. Decision?",
-    "Both videos change the shirt color as requested, but both have slight face distortion. How do I rate this?",
-    "Video A looks identical to input but slightly slower with minor distortion. Video B clearly has the edit. How do I answer 'Fails to Edit'?",
+    "Prompt says 'add sunglasses'. Video A adds them with minor flickering. Video B doesn't add sunglasses but looks perfect. What's Overall Preference?",
+    "Both videos show the same person but with different uniforms. What should Subject Preservation be?",
+    "Video A looks identical to input but slightly slower. Video B has the edit. What's Fails to Edit?",
     "Prompt says 'change guitar to violin'. Should Motion Preservation be N/A?",
-    "Prompt says 'add falling leaves in background'. The subject's motion changed slightly in one video. Is this N/A for motion?",
-    "Prompt says 'replace lioness with kitten'. The cat moves differently. Should motion be N/A?",
-    "Both videos follow the instruction, but Video B adds an extra bug that wasn't asked for. Which is better for instruction following?",
+    "Video A has better face rendering but B preserved motion better. How do I rate Face/Hand/Body?",
+    "Both videos follow the instruction, but Video B adds an extra element. Which is better for instruction following?",
     "There are no humans in the video, just dolphins. What do I put for Face/Hand/Body Rendering?",
-    "Video has speech bubble text. One video preserves it, other doesn't. Does this matter for Background Preservation?",
-    "Prompt says 'make her smile'. Video A has natural smile, Video B has exaggerated grin. Which wins?",
+    "Video A follows prompt correctly but has artifacts. Video B ignores part of prompt but looks perfect. Overall Preference?",
+    "Both videos clearly edited the input. What should Fails to Edit be?",
+    "Prompt says 'make her smile'. Both videos show the same woman smiling. What's Subject Preservation?",
   ];
 
   const quickQuestions = [
     "What are the 3 components of V2V?",
-    "What's the difference between 'Both Bad' and 'Both Good'?",
-    "How do I handle partial edits?",
-    "What are automatic fail conditions?",
+    "When should Subject Preservation be Both Good?",
+    "How is Face/Hand/Body different from preservation questions?",
+    "What's the PRIMARY criteria for Overall Preference?",
     "When should Motion Preservation be N/A?",
     "What's an implicit motion change request?",
-    "Does adding background motion make it N/A?",
-    "What counts as 'Fails to Edit'?",
+    "What should Fails to Edit be if both videos have edits?",
+    "When do we mark Overall Structure as N/A?",
     "When is Face/Hand/Body N/A?",
-    "How do I decide Overall Preference?",
+    "What questions are we LENIENT with?",
   ];
 
   return (
